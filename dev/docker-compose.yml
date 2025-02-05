@@ -1,0 +1,5 @@
+services:
+  rest:
+    image: tabulario/iceberg-rest:0.13.0
+    ports:
+      - 8181:8181
