@@ -582,21 +582,44 @@ catalog.create_table_if_not_exists(
     )
 )
 
-table = catalog.load_table(identifier='tpc_ds.catalog_page')
-# for i in range(1000):
-#     if i % 20 == 0:
-#         print(i)
-#     df = pyarrow.Table.from_pylist(
-#         [
-#             {"cp_catalog_page_sk": 1, "cp_catalog_page_id": "page1"},
-#             {"cp_catalog_page_sk": 2, "cp_catalog_page_id": "page2"},
-#             {"cp_catalog_page_sk": 3, "cp_catalog_page_id": "page3"},
-#             {"cp_catalog_page_sk": 4, "cp_catalog_page_id": "page4"},
-#             {"cp_catalog_page_sk": 5, "cp_catalog_page_id": "page5"},
-#         ], schema=table.schema().as_arrow()
-#     )
-#     table.append(df)
+catalog.create_namespace_if_not_exists("top_level_namespace")
+catalog.create_table_if_not_exists(
+    identifier='top_level_namespace.table1',
+    schema=Schema(
+        NestedField(field_id=0, name='id', field_type=LongType(), required=True),
+    )
+)
 
-# table.manage_snapshots().create_tag(3619494157201930833, "v1.0").commit()
-# table.manage_snapshots().create_branch(3619494157201930833, "staging").commit()
-# table.manage_snapshots().create_branch(7203945836429554365, "staging2").commit()
+
+catalog.create_namespace_if_not_exists("tpc_ds.inner_namespace")
+catalog.create_table_if_not_exists(
+    identifier='tpc_ds.inner_namespace.table1',
+    schema=Schema(
+        NestedField(field_id=0, name='id', field_type=LongType(), required=True),
+    )
+)
+
+catalog.create_namespace_if_not_exists("tpc_ds.inner_namespace.inner_namespace_deeper")
+catalog.create_namespace_if_not_exists("a1")
+catalog.create_namespace_if_not_exists("a1.b1")
+catalog.create_namespace_if_not_exists("a1.b1.c1")
+
+
+table = catalog.load_table(identifier='tpc_ds.catalog_page')
+for i in range(1000):
+    if i % 20 == 0:
+        print(i)
+    df = pyarrow.Table.from_pylist(
+        [
+            {"cp_catalog_page_sk": 1, "cp_catalog_page_id": "page1"},
+            {"cp_catalog_page_sk": 2, "cp_catalog_page_id": "page2"},
+            {"cp_catalog_page_sk": 3, "cp_catalog_page_id": "page3"},
+            {"cp_catalog_page_sk": 4, "cp_catalog_page_id": "page4"},
+            {"cp_catalog_page_sk": 5, "cp_catalog_page_id": "page5"},
+        ], schema=table.schema().as_arrow()
+    )
+    table.append(df)
+
+table.manage_snapshots().create_tag(table.snapshots()[40].snapshot_id, "v1.0").commit()
+table.manage_snapshots().create_branch(table.snapshots()[40].snapshot_id, "staging").commit()
+table.manage_snapshots().create_branch(table.snapshots()[87].snapshot_id, "staging2").commit()
